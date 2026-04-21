@@ -31,12 +31,15 @@ RL_project/
 ├── main.py              # Pipeline orchestrator
 ├── dashboard.html       # Visual dashboard representation of the results
 ├── requirements.txt     # Dependencies
+├── .gitignore           # Git ignore file (ignores venv, caches, results, docs)
 ├── README.md            # This file
 ├── docs/                # Detailed project documentation
 │   ├── 1_Problem_Statement.md
 │   ├── 2_Proposed_Solution.md
 │   ├── 3_Algorithms_and_Equations.md
-│   └── 4_Step_by_Step_Implementation.md
+│   ├── 4_Step_by_Step_Implementation.md
+│   ├── 5_Presentation_Slides.md
+│   └── 6_Cross_Questions.md
 └── results/             # Output directory (auto-generated)
     ├── learning_curves.png
     ├── algorithm_comparison.png
