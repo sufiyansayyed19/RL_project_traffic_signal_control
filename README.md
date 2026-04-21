@@ -78,8 +78,6 @@ All standard outputs will be saved in the `results/` folder.
 ### 5. View Dashboard
 You can simply double-click `dashboard.html` in your file explorer to see a full, stylized web dashboard of the results. No server needed!
 
-### 6. Read Detailed Documentation
-For an academic explanation, please read the markdown files located in the `docs/` folder, which explain the math, equations, and logic behind the implementations mapping to the syllabus.
 
 ## Algorithms
 
