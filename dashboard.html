@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Signal RL — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(255, 107, 107, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(192, 132, 252, 0.05) 0%, transparent 50%);
+            z-index: 0;
+        }
+
+        /* Header */
+        .header {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 50px 20px 30px;
+            background: linear-gradient(180deg, rgba(16, 22, 58, 0.9) 0%, transparent 100%);
+        }
+
+        .header-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 20px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00d4ff 0%, #c084fc 50%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .header p {
+            font-size: 17px;
+            color: #8a8aaa;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Section titles */
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .icon {
+            font-size: 24px;
+        }
+
+        /* Metrics cards row */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(22, 33, 62, 0.8) 0%, rgba(26, 26, 46, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-card .label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #7a7a9a;
+            margin-bottom: 8px;
+        }
+
+        .metric-card .value {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .metric-card .sub {
+            font-size: 13px;
+            color: #6a6a8a;
+        }
+
+        .metric-card.cyan .value { color: #00d4ff; }
+        .metric-card.coral .value { color: #ff6b6b; }
+        .metric-card.purple .value { color: #c084fc; }
+        .metric-card.gold .value { color: #ffd93d; }
+
+        /* Comparison table */
+        .table-wrapper {
+            background: rgba(22, 33, 62, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            background: rgba(0, 212, 255, 0.08);
+            padding: 14px 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8a8aaa;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        tbody td {
+            padding: 14px 20px;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 212, 255, 0.04);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .agent-name {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .agent-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-random { background: #95e1d3; }
+        .dot-fixed { background: #ffd93d; }
+        .dot-ql { background: #00d4ff; }
+        .dot-vi { background: #ff6b6b; }
+
+        .best-value {
+            color: #4caf50;
+            font-weight: 700;
+        }
+
+        /* Improvement badges */
+        .improvement {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .improvement.positive {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+        }
+
+        .improvement.negative {
+            background: rgba(255, 107, 107, 0.15);
+            color: #ff6b6b;
+        }
+
+        /* Plot grid */
+        .plot-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .plot-card {
+            background: rgba(22, 33, 62, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .plot-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .plot-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .plot-card .plot-title {
+            padding: 16px 20px 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .plot-card .plot-desc {
+            padding: 0 20px 12px;
+            font-size: 12px;
+            color: #6a6a8a;
+        }
+
+        .plot-card img {
+            width: 100%;
+            display: block;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* Findings section */
+        .findings {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .finding-card {
+            background: rgba(22, 33, 62, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .finding-card .finding-num {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #00d4ff, #c084fc);
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            line-height: 28px;
+            margin-bottom: 10px;
+        }
+
+        .finding-card p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #b0b0c0;
+        }
+
+        /* MDP section */
+        .mdp-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .mdp-item {
+            background: rgba(22, 33, 62, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .mdp-item .mdp-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #00d4ff;
+            margin-bottom: 6px;
+        }
+
+        .mdp-item .mdp-value {
+            font-size: 14px;
+            color: #d0d0e0;
+            font-weight: 500;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #4a4a6a;
+            font-size: 13px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            margin-top: 40px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .metrics-row { grid-template-columns: repeat(2, 1fr); }
+            .plot-grid { grid-template-columns: 1fr; }
+            .findings { grid-template-columns: 1fr; }
+            .mdp-grid { grid-template-columns: repeat(3, 1fr); }
+            .header h1 { font-size: 28px; }
+        }
+
+        @media (max-width: 500px) {
+            .metrics-row { grid-template-columns: 1fr; }
+            .mdp-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-badge">Reinforcement Learning Project</div>
+        <h1>Intelligent Traffic Signal Control</h1>
+        <p>An RL agent learns to optimally control traffic signals at a 4-way intersection, reducing vehicle waiting time by up to 50% compared to traditional fixed-timer signals.</p>
+    </div>
+
+    <div class="container">
+
+        <!-- Key Metrics -->
+        <div class="section-title"><span class="icon">&#x1F4CA;</span> Key Results</div>
+        <div class="metrics-row">
+            <div class="metric-card cyan">
+                <div class="label">Q-Learning Wait Time</div>
+                <div class="value">2.02</div>
+                <div class="sub">cars/step avg (43% better than fixed timer)</div>
+            </div>
+            <div class="metric-card coral">
+                <div class="label">Optimal (Value Iteration)</div>
+                <div class="value">1.75</div>
+                <div class="sub">cars/step avg (theoretical best)</div>
+            </div>
+            <div class="metric-card gold">
+                <div class="label">State Space</div>
+                <div class="value">2,592</div>
+                <div class="sub">unique states in the MDP</div>
+            </div>
+            <div class="metric-card purple">
+                <div class="label">Q-Learning Optimality</div>
+                <div class="value">84%</div>
+                <div class="sub">of Value Iteration performance</div>
+            </div>
+        </div>
+
+        <!-- MDP Formulation -->
+        <div class="section-title"><span class="icon">&#x1F9E0;</span> MDP Formulation</div>
+        <div class="mdp-grid">
+            <div class="mdp-item">
+                <div class="mdp-label">States</div>
+                <div class="mdp-value">(q_N, q_S, q_E, q_W, phase)<br>6&times;6&times;6&times;6&times;2 = 2,592</div>
+            </div>
+            <div class="mdp-item">
+                <div class="mdp-label">Actions</div>
+                <div class="mdp-value">{Keep, Switch}<br>2 actions</div>
+            </div>
+            <div class="mdp-item">
+                <div class="mdp-label">Reward</div>
+                <div class="mdp-value">-(total wait)<br>- switch penalty</div>
+            </div>
+            <div class="mdp-item">
+                <div class="mdp-label">Transitions</div>
+                <div class="mdp-value">Stochastic<br>(random arrivals)</div>
+            </div>
+            <div class="mdp-item">
+                <div class="mdp-label">Discount</div>
+                <div class="mdp-value">&gamma; = 0.95</div>
+            </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="section-title"><span class="icon">&#x1F4CB;</span> Algorithm Comparison</div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Agent</th>
+                        <th>Avg Reward</th>
+                        <th>Avg Wait Time</th>
+                        <th>Throughput</th>
+                        <th>Keep %</th>
+                        <th>Switch %</th>
+                        <th>Training Time</th>
+                        <th>vs Fixed Timer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="agent-name"><span class="agent-dot dot-random"></span>Random</span></td>
+                        <td>-311.27</td>
+                        <td>2.86</td>
+                        <td>131.9</td>
+                        <td>50.3%</td>
+                        <td>49.7%</td>
+                        <td>N/A</td>
+                        <td><span class="improvement positive">+19%</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="agent-name"><span class="agent-dot dot-fixed"></span>Fixed Timer</span></td>
+                        <td>-363.42</td>
+                        <td>3.53</td>
+                        <td>132.9</td>
+                        <td>80.0%</td>
+                        <td>20.0%</td>
+                        <td>N/A</td>
+                        <td><span style="color: #6a6a8a;">baseline</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="agent-name"><span class="agent-dot dot-ql"></span>Q-Learning</span></td>
+                        <td>-226.12</td>
+                        <td class="best-value">2.02</td>
+                        <td>132.6</td>
+                        <td>51.5%</td>
+                        <td>48.5%</td>
+                        <td>~2s</td>
+                        <td><span class="improvement positive">+43%</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="agent-name"><span class="agent-dot dot-vi"></span>Value Iteration</span></td>
+                        <td class="best-value">-197.81</td>
+                        <td class="best-value">1.75</td>
+                        <td class="best-value">133.3</td>
+                        <td>53.6%</td>
+                        <td>46.4%</td>
+                        <td>~21s</td>
+                        <td><span class="improvement positive">+50%</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Plots -->
+        <div class="section-title"><span class="icon">&#x1F4C8;</span> Visualizations</div>
+        <div class="plot-grid">
+            <div class="plot-card full-width">
+                <div class="plot-title">Summary Dashboard</div>
+                <div class="plot-desc">Overview of Q-Learning training, algorithm comparison, wait time reduction, and Value Iteration convergence</div>
+                <img src="results/summary_dashboard.png" alt="Summary Dashboard">
+            </div>
+            <div class="plot-card">
+                <div class="plot-title">Q-Learning Training Progress</div>
+                <div class="plot-desc">Reward convergence and wait time reduction over 2,000 episodes with epsilon decay overlay</div>
+                <img src="results/learning_curves.png" alt="Learning Curves">
+            </div>
+            <div class="plot-card">
+                <div class="plot-title">Algorithm Performance Comparison</div>
+                <div class="plot-desc">Bar chart comparing avg wait time, reward, and throughput across all 4 agents</div>
+                <img src="results/algorithm_comparison.png" alt="Algorithm Comparison">
+            </div>
+            <div class="plot-card">
+                <div class="plot-title">Traffic Queue Dynamics</div>
+                <div class="plot-desc">Queue lengths per direction over a single episode, with signal phase changes marked</div>
+                <img src="results/queue_dynamics.png" alt="Queue Dynamics">
+            </div>
+            <div class="plot-card">
+                <div class="plot-title">Action Distribution</div>
+                <div class="plot-desc">Keep vs Switch frequency for each agent showing different control strategies</div>
+                <img src="results/action_distribution.png" alt="Action Distribution">
+            </div>
+            <div class="plot-card full-width">
+                <div class="plot-title">Value Iteration Convergence</div>
+                <div class="plot-desc">Maximum value change (delta) per iteration on log scale — converged at iteration 162</div>
+                <img src="results/vi_convergence.png" alt="VI Convergence">
+            </div>
+        </div>
+
+        <!-- Key Findings -->
+        <div class="section-title"><span class="icon">&#x1F4A1;</span> Key Findings</div>
+        <div class="findings">
+            <div class="finding-card">
+                <div class="finding-num">1</div>
+                <p><strong>RL outperforms traditional methods.</strong> Both Q-Learning and Value Iteration significantly reduce waiting times compared to Random and Fixed Timer baselines, proving that intelligent signal control is superior to rule-based approaches.</p>
+            </div>
+            <div class="finding-card">
+                <div class="finding-num">2</div>
+                <p><strong>Model-free vs model-based tradeoff.</strong> Value Iteration gives the optimal solution but requires full knowledge of traffic dynamics. Q-Learning learns from experience alone, making it more practical for real-world deployment.</p>
+            </div>
+            <div class="finding-card">
+                <div class="finding-num">3</div>
+                <p><strong>Q-Learning achieves near-optimal performance.</strong> With ~84% of Value Iteration's performance, Q-Learning demonstrates that model-free methods can approach optimal solutions through sufficient exploration and learning.</p>
+            </div>
+            <div class="finding-card">
+                <div class="finding-num">4</div>
+                <p><strong>Reward engineering matters.</strong> The switch penalty prevents unrealistic rapid signal flickering, modeling the real-world yellow-light delay. Without it, the agent would switch every step.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Traffic Signal Control using Reinforcement Learning &mdash; Q-Learning &amp; Value Iteration
+    </div>
+
+</body>
+</html>
